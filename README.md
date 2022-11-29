@@ -7,11 +7,17 @@ Fall 2022
 ### <span style="color:blue">*Import Data:*</span> 
 #### *In Terminal*
 > cd /home/julias/MLEE-final-project/raw_data/
+
 > wget -O cesm009.tar.gz https://ndownloader.figshare.com/files/16129532
+
 > tar -xf cesm009.tar.gz
-> mv -f /home/julias/MLEE_JLSProject/raw_data/member_009/* /home/julias/MLEE_JLSProject/raw_data/
+
+> mv -f /home/julias/MLEE-final-project/raw_data/member_009/* /home/julias/MLEE-final-project/raw_data/
+
 > rm cesm009.tar.gz
+
 > rmdir member_009
+
 - Note that data files exceed Github file limitation and therefore are ignored in pushes
 
 ### <span style="color:blue">*Goal:*</span>
