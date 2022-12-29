@@ -1,8 +1,20 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import xarray as xr
+#import numpy as np
+#import pandas as pd
+#import matplotlib.pyplot as plt
+#import xarray as xr
 
+import os
+from pathlib import Path
+from collections import defaultdict
+import scipy
+import random
+import numpy as np
+import xarray as xr
+import matplotlib.pyplot as plt
+import pandas as pd
+import joblib
+#import sklearn
+#from skimage.filters import sobel
 
 def import_model_data(ens, member, date_start, date_end):
     
@@ -15,6 +27,7 @@ def import_model_data(ens, member, date_start, date_end):
     full_potential_variables_list = []
     inputs = {}
     inputs['socat_mask'] = xr.open_dataset(mask_path).socat_mask.sel(time=slice(date_start,date_end))
+    inputs['net_mask'] = xr.open_dataset(mask_path).net_mask.sel(time=slice(date_start,date_end))
 #time = inputs['socat_mask']
 
     for variable in variables:
@@ -54,11 +67,11 @@ def import_model_data(ens, member, date_start, date_end):
             full_potential_variables_list.append(base_url.format(variable,ens,member))
     
     for i in inputs:        
-        if i != 'XCO2' and i != 'socat_mask':
+        if i != 'XCO2' and i != 'socat_mask' and i != 'net_mask':
             inputs[i] = inputs[i].assign_coords(xlon=(((inputs[i].xlon+180)%360)-180)) # wraps from 0 to 360 to -180 to 180
             inputs[i] = inputs[i].sortby(inputs[i].xlon)    
         
-    DS = xr.merge([inputs['SSS'], inputs['SST'], inputs['MLD'], inputs['Chl'], inputs['pCO2'], inputs['socat_mask']])
+    DS = xr.merge([inputs['SSS'], inputs['SST'], inputs['MLD'], inputs['Chl'], inputs['pCO2'], inputs['socat_mask'], inputs['net_mask']])
     
     DS.xlon.attrs['long_name'] = 'longitude'
     DS.xlon.attrs['standard_name'] = 'longitude'
@@ -70,19 +83,19 @@ def import_model_data(ens, member, date_start, date_end):
 
 ##################################################################################################
 
-def create_features(df, df_XCO2, N_time, N_batch): #NOTE maybe change time back to 421
-        
-    XCO2_full = np.repeat(df_XCO2.values, 360*180)
+def create_features(ds, ds_XCO2, N_time, N_batch): #NOTE maybe change time back to 421
+    
+    XCO2_full = np.repeat(ds_XCO2.values, 360*180)
     test_XCO2 = np.reshape(np.ravel(XCO2_full), (420, 180, 360))
-    df['XCO2'] = df['SSS']
-    df['XCO2'].values = test_XCO2
+    ds['XCO2'] = ds['SSS']
+    ds['XCO2'].values = test_XCO2
     
-    days_idx = df['time'].dt.dayofyear #df.index.get_level_values('time').dayofyear
-    df['T0'], df['T1'] = [np.cos(days_idx * 2 * np.pi / 365), np.sin(days_idx * 2 * np.pi / 365)]
+    days_idx = ds['time'].dt.dayofyear #df.index.get_level_values('time').dayofyear
+    ds['T0'], ds['T1'] = [np.cos(days_idx * 2 * np.pi / 365), np.sin(days_idx * 2 * np.pi / 365)]
     
     
-    lon_rad = np.radians(df.xlon)
-    lat_rad = np.radians(df.ylat)
-    df['A'], df['B'], df['C'] = [np.sin(lat_rad), np.sin(lon_rad)*np.cos(lat_rad), -np.cos(lon_rad)*np.cos(lat_rad)]
+    lon_rad = np.radians(ds.xlon)
+    lat_rad = np.radians(ds.ylat)
+    ds['A'], ds['B'], ds['C'] = [np.sin(lat_rad), np.sin(lon_rad)*np.cos(lat_rad), -np.cos(lon_rad)*np.cos(lat_rad)]
     
-    return df
+    return ds
