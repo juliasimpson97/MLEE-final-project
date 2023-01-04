@@ -101,6 +101,10 @@ def evaluate_test(y, pred):
 # Saving functions
 #===============================================
 
+def make_dir(path):
+    if os.path.exists(path) is False:
+        os.makedirs(path)
+
 def save_model(model, model_output_dir, approach, ens, member, run=None):
     print("Starting model saving process")
     model_dir = f"{model_output_dir}/{approach}/{ens}/member_{member}"
