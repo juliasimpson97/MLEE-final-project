@@ -19,6 +19,29 @@ from keras.layers import Dense, BatchNormalization, Dropout
 from statsmodels.nonparametric.smoothers_lowess import lowess
 from glob import glob
 
+#==============================================================
+# If want to split dataset so have additional validation set
+#==============================================================
+
+def train_val_test_split(N, test_prop, val_prop, random_seeds, ens_count):
+    intermediate_idx, test_idx = train_test_split(range(N), test_size=test_prop, random_state=random_seeds[0,ens_count])
+    train_idx, val_idx = train_test_split(intermediate_idx, test_size=val_prop/(1-test_prop), random_state=random_seeds[1,ens_count])
+    return intermediate_idx, train_idx, val_idx, test_idx
+
+def apply_splits(X, y, train_val_idx, train_idx, val_idx, test_idx):
+    X_train_val = X[train_val_idx,:]
+    X_train = X[train_idx,:]
+    X_val = X[val_idx,:]
+    X_test = X[test_idx,:]
+
+    y_train_val = y[train_val_idx]
+    y_train = y[train_idx]
+    y_val = y[val_idx]
+    y_test = y[test_idx]
+
+    return X_train_val, X_train, X_val, X_test, y_train_val, y_train, y_val, y_test
+
+
 #===============================================
 # NN functions
 #===============================================
@@ -77,14 +100,6 @@ def evaluate_test(y, pred):
 #===============================================
 # Saving functions
 #===============================================
-
-#def save_clean_data(df, data_output_dir, ens, member):
-#    print("Starting data saving process")
-#    output_dir = f"{data_output_dir}/{ens}/member_{member}"
-#    Path(output_dir).mkdir(parents=True, exist_ok=True)
-#    fname = f"{output_dir}/data_clean_2D_mon_{ens}_{member}_1x1_198201-201701.pkl"
-#    df.to_pickle(fname)
-#    print("Save complete")
 
 def save_model(model, model_output_dir, approach, ens, member, run=None):
     print("Starting model saving process")
