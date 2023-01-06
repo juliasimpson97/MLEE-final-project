@@ -73,7 +73,16 @@ def build_nn_vf(num_features, act='relu', learning_rate=0.01, reg=0.001):
 #===============================================
 # Evaluation functions
 #===============================================
-
+def plot_history(history):
+    plt.figure()
+    plt.xlabel('Epoch')
+    plt.ylabel('Mean squared error')
+    plt.plot(history.epoch, np.array(history.history['loss']),
+           label='Train Loss')
+    plt.plot(history.epoch, np.array(history.history['val_loss']),
+           label = 'Val loss')
+    plt.legend()
+    
 def centered_rmse(y,pred):
     y_mean = np.mean(y)
     pred_mean = np.mean(pred)
